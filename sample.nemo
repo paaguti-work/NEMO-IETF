@@ -1,0 +1,9 @@
+//
+// As we develop the editor following draft-xia-sdnrg-nemo-language-03
+// we will include a demo file that covers the whole language
+//
+
+NodeModel  NAT
+	Property String: name, IPPrefix: publicIP, IPPrefix: privateIP ;
+NodeModel L2Switch
+	Property Integer: ports;

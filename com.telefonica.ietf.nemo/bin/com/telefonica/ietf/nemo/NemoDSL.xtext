@@ -1,0 +1,33 @@
+grammar com.telefonica.ietf.nemo.NemoDSL with org.eclipse.xtext.common.Terminals
+
+generate nemoDSL "http://www.telefonica.com/ietf/nemo/NemoDSL"
+
+NemoFile:
+	specss+=Spec*;
+	
+Spec:
+	ModelDefinition
+	';'
+;
+
+ModelDefinition:
+	NodeModel // | LinkModel // TODO
+;
+
+NodeModel:
+	"NodeModel" name=ID
+	"Property" propertyDefinitions += DefineProperty (',' propertyDefinitions+=DefineProperty)* 
+;
+
+DefineProperty:
+	propertyType=Type ':' name=ID
+;
+
+// TODO List(Type)
+
+Type:
+	{Type} "Boolean" | "Integer" | "String" | "Date" | "UUID" | "EthAddr" | "IPPrefix"
+;
+	
+
+

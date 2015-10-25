@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="nemoDSL" nsURI="http://www.telefonica.com/ietf/nemo/NemoDSL"
+    nsPrefix="nemoDSL">
+  <eClassifiers xsi:type="ecore:EClass" name="NemoFile">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="specss" upperBound="-1"
+        eType="#//Spec" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Spec"/>
+  <eClassifiers xsi:type="ecore:EClass" name="ModelDefinition" eSuperTypes="#//Spec"/>
+  <eClassifiers xsi:type="ecore:EClass" name="NodeModel" eSuperTypes="#//ModelDefinition">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="propertyDefinitions" upperBound="-1"
+        eType="#//DefineProperty" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DefineProperty">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="propertyType" eType="#//Type"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Type"/>
+</ecore:EPackage>

@@ -1,33 +1,72 @@
-grammar com.telefonica.ietf.nemo.NemoDSL with org.eclipse.xtext.common.Terminals
+grammar com.telefonica.ietf.nemo.NemoDSL with org.eclipse.xtext.common.Terminals 
 
 generate nemoDSL "http://www.telefonica.com/ietf/nemo/NemoDSL"
 
 NemoFile:
-	specss+=Spec*;
+	specss+=Spec*
+;
 	
 Spec:
-	ModelDefinition
+	(NodeModel | LinkModel | Create | Delete)
 	';'
 ;
 
-ModelDefinition:
-	NodeModel // | LinkModel // TODO
+Create:
+	"Create" (NodeCreate | LinkCreate)
+;
+
+Delete:
+	"Delete" (NodeDelete | LinkDelete)
+;
+
+LinkDelete:
+	"Link" del=[LinkCreate]
+;
+
+NodeDelete:
+	"Node" del=[NodeCreate]	
 ;
 
 NodeModel:
 	"NodeModel" name=ID
-	"Property" propertyDefinitions += DefineProperty (',' propertyDefinitions+=DefineProperty)* 
+	"Property" nodeProperties += DefineProperty (',' nodeProperties+=DefineProperty)* 
+;
+
+LinkModel:
+	"LinkModel" name=ID
+	"Property" linkProperties += DefineProperty (',' linkProperties+=DefineProperty)* 
 ;
 
 DefineProperty:
 	propertyType=Type ':' name=ID
 ;
 
-// TODO List(Type)
+NodeCreate:
+	"Node" name=ID 
+		"Type"  nodeType=[NodeModel]
+		"Property" nodeProperties+=UseProperty (',' nodeProperties += UseProperty)
+;
+
+LinkCreate:
+	"Link" name=ID 
+		"Type"  linkType=[LinkModel]
+		"Property" linkProperties+=UseProperty (',' linkProperties += UseProperty)
+;
+
+UseProperty:
+	definedProp=[DefineProperty] ':' propValue=Value
+;
 
 Type:
-	{Type} "Boolean" | "Integer" | "String" | "Date" | "UUID" | "EthAddr" | "IPPrefix"
+	(atomicType=AtomicType) | 
+	('List' '(' typeOfList=AtomicType ')')
 ;
-	
 
+AtomicType:
+	{AtomicType} "Boolean" | "Integer" | "String" | "Date" | "UUID" | "EthAddr" | "IPPrefix"
+;
 
+// TODO: Unquoted string for values
+Value : 
+	(value=STRING) | ('{' valueList+=STRING (',' valueList += STRING)* '}')	
+;

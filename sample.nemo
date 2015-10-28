@@ -3,7 +3,28 @@
 // we will include a demo file that covers the whole language
 //
 
-NodeModel  NAT
-	Property String: name, IPPrefix: publicIP, IPPrefix: privateIP ;
+	
 NodeModel L2Switch
-	Property Integer: ports;
+	Property Integer: ports , EthAddr : macAddr;
+	
+NodeModel Router
+	Property IPPrefix: wanPrefix, List(IPPrefix): localPrefixes;
+
+LinkModel WAN
+	Property Integer: bandwidth, IPPrefix: prefix;
+
+//
+// TODO: references to properties.- filter depending on Node/Link Type
+// TODO: generalised values
+//
+
+Create Node DMZSwitch 
+	Type L2Switch 
+	Property macAddr: "00:00:00:00:00:01" , prefix:"10.0.0.0/24";
+
+Create Node MadRouter
+	Type Router
+	Property wanPrefix: "192.168.1.0/30",  localPrefixes: { "192.168.3.0/24","192.168.4.0/24" };
+	
+
+

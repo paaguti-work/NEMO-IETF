@@ -7,56 +7,123 @@ NemoFile:
 ;
 	
 Spec:
-	(NodeModel | LinkModel | Create | Delete)
+	(Model | Create | Delete | Update)
 	';'
 ;
 
-Create:
-	"Create" (NodeCreate | LinkCreate)
+Model : 
+	ConnectionModel | NodeModel | LinkModel | FlowModel | ActionModel
 ;
 
-Delete:
-	"Delete" (NodeDelete | LinkDelete)
+ConnectionModel:
+	"ConnectionModel" name=ID
+	"Property" linkProperties += DefineProperty (',' linkProperties+=DefineProperty)* 
 ;
-
-LinkDelete:
-	"Link" del=[LinkCreate]
-;
-
-NodeDelete:
-	"Node" del=[NodeCreate]	
-;
-
 NodeModel:
 	"NodeModel" name=ID
 	"Property" nodeProperties += DefineProperty (',' nodeProperties+=DefineProperty)* 
 ;
-
 LinkModel:
 	"LinkModel" name=ID
 	"Property" linkProperties += DefineProperty (',' linkProperties+=DefineProperty)* 
 ;
+FlowModel:
+	"FlowModel" name=ID
+	"Property" flowProperties += DefineProperty (',' flowProperties+=DefineProperty)* 
+;
+ActionModel:
+	"ActionModel" name=ID
+	"Property" actionProperties += DefineProperty (',' actionProperties+=DefineProperty)* 
+;
 
-DefineProperty:
-	propertyType=Type ':' name=ID
+Create:
+	"Create" (NodeCreate | LinkCreate | ConnectionCreate | FlowCreate)
 ;
 
 NodeCreate:
 	"Node" name=ID 
 		"Type"  nodeType=[NodeModel]
-		"Property" nodeProperties+=UseProperty (',' nodeProperties += UseProperty)
+		("Contains" nodeContain+=[NodeCreate] (',' nodeContain+=[NodeCreate])*)?
+		"Property" nodeProperties+=UseProperty (',' nodeProperties += UseProperty)*
 ;
-
 LinkCreate:
 	"Link" name=ID 
 		"Type"  linkType=[LinkModel]
-		"Property" linkProperties+=UseProperty (',' linkProperties += UseProperty)
+		"Property" linkProperties+=UseProperty (',' linkProperties += UseProperty)*
+;
+
+ConnectionCreate:
+	"Connection" name=ID
+	"Type" conectionType=[ConnectionModel]	
+	("EndNodes" nodes+=[NodeCreate] ',' nodes+=[NodeCreate])?
+	"Property" nodeProperties+=UseProperty (',' nodeProperties += UseProperty)*		
+;
+
+FlowCreate:
+	"Flow" name=ID
+	"Match" matchProp+=[DefineProperty] ':' ((val+=STRING) |
+		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
+		("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING))
+		 (',' matchProp+=[DefineProperty] ':' ((val+=STRING) |
+		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
+		("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING)))	
+;
+
+Delete:
+	"Delete" (NodeDelete | LinkDelete)
+;
+LinkDelete:
+	"Link" del=[LinkCreate]
+;
+NodeDelete:
+	"Node" del=[NodeCreate]	
+;
+
+Update:
+	"Update" (UpdateNode|UpdateConnection|UpdateFlow)
+;
+
+UpdateNode:
+	"Node" node=[NodeCreate]
+		("Contains" nodeContain+=[NodeCreate] (',' nodeContain+=[NodeCreate])*)?
+		"Property" nodeProperties+=UseProperty (',' nodeProperties += UseProperty)*	
+;
+
+UpdateConnection:
+	"Connection" modConnection=[ConnectionCreate]
+	("EndNodes" nodes+=[NodeCreate] ',' nodes+=[NodeCreate])?
+	("Property" nodeProperties+=UseProperty (',' nodeProperties += UseProperty)*)?		
+;
+
+/*
+ *    <flow_update> := UPDATE Flow <flow_id>
+                           Match {<property_name>: <value>
+                                 | Range (<value>, <value>)
+                                 | List({<value>})}
+ 
+ */
+UpdateFlow:
+	"Flow" flowID=[FlowCreate]
+	"Match" matchProp+=[DefineProperty] ':' ((val+=STRING) |
+		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
+		("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING))
+		 (',' matchProp+=[DefineProperty] ':' ((val+=STRING) |
+		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
+		("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING)))	
+;
+DefineProperty:
+	propertyType=Type ':' name=ID
 ;
 
 UseProperty:
 	definedProp=[DefineProperty] ':' propValue=Value
 ;
 
+FlowProperty:
+	flowProp=[DefineProperty] ':' ((val=STRING) |
+		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
+		("RANGE" "(" lowerVal=STRING ',' upperVal=STRING))
+;
 Type:
 	(atomicType=AtomicType) | 
 	('List' '(' typeOfList=AtomicType ')')

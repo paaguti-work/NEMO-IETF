@@ -26,5 +26,19 @@ Create Node MadRouter
 	Type Router
 	Property wanPrefix: "192.168.1.0/30",  localPrefixes: { "192.168.3.0/24","192.168.4.0/24" };
 	
+Create Node MadDMZ
+	Type Router
+	Contains DMZSwitch, MadDMZ
+	Property prefix:"10.0.0.0/8"	
 
+Create Link TYOMAD 
+	Type WAN
+	Property bandwidth:"10000000", prefix:"192.168.0.0/30";
 
+ConnectionModel VPNConnection
+	Property Boolean: doCrypt, IPPrefix: prefix;
+	
+Create Connection TokyoVPN
+	Type VPNConnection
+	EndNodes MadDMZ, DMZSwitch
+	Property doCrypt:"TRUE", prefix:"10.0.1.0/30";

@@ -1,19 +1,37 @@
 grammar com.telefonica.ietf.nemo.NemoDSL with org.eclipse.xtext.common.Terminals 
-
+	
 generate nemoDSL "http://www.telefonica.com/ietf/nemo/NemoDSL"
 
 NemoFile:
+	(server=ServerDef)?
 	specss+=Spec*
+;
+
+
+ServerDef:
+	// Not in draft
+	("Engines:" | "ENGINES:") engines+=IP4 (',' engines+=IP4)* ';'
 ;
 	
 Spec:
-	(Model | Create | Delete | Update)
+	(Model | Create | Delete | Update | Import)
 	';'
+;
+
+/*
+ IMPORT Node internet Type ext-group  Property location:"openflow:3:4",ac-info-network:"layer3",ac-info-protocol:"static",ip-prefix:"172.168.1.0/24";
+ IMPORT Node video-server2 Type host;
+ */
+Import:
+	"IMPORT" "Node" name=ID 
+	"Type" importType=[NodeModel]
+	("Property" importProps+=[DefineProperty] ':' importVals+=STRING (',' importProps+=[DefineProperty] ':' importVals+=STRING)*)?	
 ;
 
 Model : 
 	ConnectionModel | NodeModel | LinkModel | FlowModel | ActionModel
 ;
+
 
 ConnectionModel:
 	"ConnectionModel" name=ID
@@ -37,7 +55,14 @@ ActionModel:
 ;
 
 Create:
-	"Create" (NodeCreate | LinkCreate | ConnectionCreate | FlowCreate)
+	"CREATE" (NodeCreate | LinkCreate | ConnectionCreate | FlowCreate | User)
+;
+
+// CREATE "user2" "abc" "tenant"; 
+// Not in draft 
+// *** Make sense??? ***
+User: 
+	userName=STRING password=STRING role=STRING
 ;
 
 NodeCreate:
@@ -70,7 +95,7 @@ FlowCreate:
 ;
 
 Delete:
-	"Delete" (NodeDelete | LinkDelete)
+	"DELETE" (NodeDelete | LinkDelete)
 ;
 LinkDelete:
 	"Link" del=[LinkCreate]
@@ -80,7 +105,7 @@ NodeDelete:
 ;
 
 Update:
-	"Update" (UpdateNode|UpdateConnection|UpdateFlow)
+	"UPDATE" (UpdateNode|UpdateConnection|UpdateFlow)
 ;
 
 UpdateNode:
@@ -104,25 +129,19 @@ UpdateConnection:
  */
 UpdateFlow:
 	"Flow" flowID=[FlowCreate]
-	"Match" matchProp+=[DefineProperty] ':' ((val+=STRING) |
-		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
-		("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING))
-		 (',' matchProp+=[DefineProperty] ':' ((val+=STRING) |
-		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
-		("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING)))	
+	"Match" matchProps+=[DefineProperty] ':' matchValues+=FlowValue
+		 (',' matchProps+=[DefineProperty] ':' matchValues+=FlowCreate)*	
 ;
 DefineProperty:
 	propertyType=Type ':' name=ID
 ;
 
 UseProperty:
-	definedProp=[DefineProperty] ':' propValue=Value
+	definedProp=[DefineProperty] ':' propValue=STRING
 ;
 
 FlowProperty:
-	flowProp=[DefineProperty] ':' ((val=STRING) |
-		("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
-		("RANGE" "(" lowerVal=STRING ',' upperVal=STRING))
+	flowProp=[DefineProperty] ':' flowvalue=FlowValue
 ;
 Type:
 	(atomicType=AtomicType) | 
@@ -133,7 +152,10 @@ AtomicType:
 	{AtomicType} "Boolean" | "Integer" | "String" | "Date" | "UUID" | "EthAddr" | "IPPrefix"
 ;
 
-// TODO: Unquoted string for values
-Value : 
-	(value=STRING) | ('{' valueList+=STRING (',' valueList += STRING)* '}')	
+FlowValue:
+	(val=STRING) |
+	("LIST" "(" listVal+=STRING (',' listVal+=STRING)")") |
+	("RANGE" "(" lowerVal+=STRING ',' upperVal+=STRING)
 ;
+
+terminal IP4: INT '.' INT '.' INT '.' INT;
